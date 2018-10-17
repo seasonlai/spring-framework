@@ -86,7 +86,9 @@ public class ComponentScanBeanDefinitionParser implements BeanDefinitionParser {
 				ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS);
 
 		// Actually scan for bean definitions and register them.
+		//真正工作的对象
 		ClassPathBeanDefinitionScanner scanner = configureScanner(parserContext, element);
+		//开始扫描
 		Set<BeanDefinitionHolder> beanDefinitions = scanner.doScan(basePackages);
 		registerComponents(parserContext.getReaderContext(), beanDefinitions, element);
 
@@ -96,34 +98,35 @@ public class ComponentScanBeanDefinitionParser implements BeanDefinitionParser {
 	protected ClassPathBeanDefinitionScanner configureScanner(ParserContext parserContext, Element element) {
 		boolean useDefaultFilters = true;
 		if (element.hasAttribute(USE_DEFAULT_FILTERS_ATTRIBUTE)) {
+			//解析“use-default-filters”属性
 			useDefaultFilters = Boolean.valueOf(element.getAttribute(USE_DEFAULT_FILTERS_ATTRIBUTE));
 		}
-
 		// Delegate bean definition registration to scanner class.
+		//扫描bean的代理,添加了过滤器，扫描@Component类型的类
 		ClassPathBeanDefinitionScanner scanner = createScanner(parserContext.getReaderContext(), useDefaultFilters);
 		scanner.setBeanDefinitionDefaults(parserContext.getDelegate().getBeanDefinitionDefaults());
+		//设置注入匹配模式，默认是0
 		scanner.setAutowireCandidatePatterns(parserContext.getDelegate().getAutowireCandidatePatterns());
-
+		//解析resource-pattern属性
 		if (element.hasAttribute(RESOURCE_PATTERN_ATTRIBUTE)) {
 			scanner.setResourcePattern(element.getAttribute(RESOURCE_PATTERN_ATTRIBUTE));
 		}
-
 		try {
+			//解析name-generator属性（名字生成器）
 			parseBeanNameGenerator(element, scanner);
 		}
 		catch (Exception ex) {
 			parserContext.getReaderContext().error(ex.getMessage(), parserContext.extractSource(element), ex.getCause());
 		}
-
 		try {
+			//解析scope-resolver、scoped-proxy属性，两个不能同时共存
 			parseScope(element, scanner);
 		}
 		catch (Exception ex) {
 			parserContext.getReaderContext().error(ex.getMessage(), parserContext.extractSource(element), ex.getCause());
 		}
-
+		//解析include-filter、exclude-filter子标签
 		parseTypeFilters(element, scanner, parserContext);
-
 		return scanner;
 	}
 
@@ -137,24 +140,26 @@ public class ComponentScanBeanDefinitionParser implements BeanDefinitionParser {
 
 		Object source = readerContext.extractSource(element);
 		CompositeComponentDefinition compositeDef = new CompositeComponentDefinition(element.getTagName(), source);
-
 		for (BeanDefinitionHolder beanDefHolder : beanDefinitions) {
 			compositeDef.addNestedComponent(new BeanComponentDefinition(beanDefHolder));
 		}
-
 		// Register annotation config processors, if necessary.
+		//这里annotationConfig初始化为true
 		boolean annotationConfig = true;
+		//当没写annotation-config属性时，annotationConfig仍为true
 		if (element.hasAttribute(ANNOTATION_CONFIG_ATTRIBUTE)) {
 			annotationConfig = Boolean.valueOf(element.getAttribute(ANNOTATION_CONFIG_ATTRIBUTE));
 		}
+		//所以配置了<context:component-scan .../>后，无需要配置<context:annotation-config/>
 		if (annotationConfig) {
+			//注册相关注解的解析处理类到spring容器中
 			Set<BeanDefinitionHolder> processorDefinitions =
 					AnnotationConfigUtils.registerAnnotationConfigProcessors(readerContext.getRegistry(), source);
 			for (BeanDefinitionHolder processorDefinition : processorDefinitions) {
 				compositeDef.addNestedComponent(new BeanComponentDefinition(processorDefinition));
 			}
 		}
-
+		//触发注册事件
 		readerContext.fireComponentRegistered(compositeDef);
 	}
 

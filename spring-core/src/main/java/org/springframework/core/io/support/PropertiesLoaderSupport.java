@@ -63,6 +63,7 @@ public abstract class PropertiesLoaderSupport {
 	 * Set local properties, e.g. via the "props" tag in XML bean definitions.
 	 * These can be considered defaults, to be overridden by properties
 	 * loaded from files.
+	 * 在xml中通过props属性进行赋值
 	 */
 	public void setProperties(Properties properties) {
 		this.localProperties = new Properties[] {properties};
@@ -71,6 +72,7 @@ public abstract class PropertiesLoaderSupport {
 	/**
 	 * Set local properties, e.g. via the "props" tag in XML bean definitions,
 	 * allowing for merging multiple properties sets into one.
+	 * 在xml中通过props属性进行赋值
 	 */
 	public void setPropertiesArray(Properties... propertiesArray) {
 		this.localProperties = propertiesArray;
@@ -145,20 +147,19 @@ public abstract class PropertiesLoaderSupport {
 	 */
 	protected Properties mergeProperties() throws IOException {
 		Properties result = new Properties();
-
+		//localOverride默认为false，表示本地属性的不能覆盖从外部加载属性
 		if (this.localOverride) {
-			// Load properties from file upfront, to let local properties override.
+			// 加载location属性的表示的文件，本质是通过java的Properties类进行加载
 			loadProperties(result);
 		}
-
+		//把本地的属性合并，localProperties可在xml文件中通过props属性进行设置
 		if (this.localProperties != null) {
 			for (Properties localProp : this.localProperties) {
 				CollectionUtils.mergePropertiesIntoMap(localProp, result);
 			}
 		}
-
 		if (!this.localOverride) {
-			// Load properties from file afterwards, to let those properties override.
+			// 加载location属性的表示的文件，本质是通过java的Properties类进行加载
 			loadProperties(result);
 		}
 
@@ -166,6 +167,7 @@ public abstract class PropertiesLoaderSupport {
 	}
 
 	/**
+	 * 加载属性到指定的Properties对象
 	 * Load properties into the given instance.
 	 * @param props the Properties instance to load into
 	 * @throws IOException in case of I/O errors

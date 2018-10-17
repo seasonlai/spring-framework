@@ -140,42 +140,53 @@ public class PropertyPlaceholderHelper {
 							"Circular placeholder reference '" + originalPlaceholder + "' in property definitions");
 				}
 				// Recursive invocation, parsing placeholders contained in the placeholder key.
+				//递归解析，处理嵌套？
 				placeholder = parseStringValue(placeholder, placeholderResolver, visitedPlaceholders);
 				// Now obtain the value for the fully resolved key...
+				//调用处理器拿到属性值，其实调用的是getPropertyAsRawString方法
 				String propVal = placeholderResolver.resolvePlaceholder(placeholder);
 				if (propVal == null && this.valueSeparator != null) {
+					//为空，可能格式是  xxxx:xxx(冒号后面是默认值)
 					int separatorIndex = placeholder.indexOf(this.valueSeparator);
 					if (separatorIndex != -1) {
+						//拿到真正的要替换的值
 						String actualPlaceholder = placeholder.substring(0, separatorIndex);
+						//默认值
 						String defaultValue = placeholder.substring(separatorIndex + this.valueSeparator.length());
+						//调用处理器进行处理
 						propVal = placeholderResolver.resolvePlaceholder(actualPlaceholder);
 						if (propVal == null) {
-							propVal = defaultValue;
+							propVal = defaultValue;//为空就复制为默认值
 						}
 					}
 				}
 				if (propVal != null) {
 					// Recursive invocation, parsing placeholders contained in the
 					// previously resolved placeholder value.
+					//递归执行，拿到最终的值
 					propVal = parseStringValue(propVal, placeholderResolver, visitedPlaceholders);
 					result.replace(startIndex, endIndex + this.placeholderSuffix.length(), propVal);
 					if (logger.isTraceEnabled()) {
 						logger.trace("Resolved placeholder '" + placeholder + "'");
 					}
+					//进行入下次循环
 					startIndex = result.indexOf(this.placeholderPrefix, startIndex + propVal.length());
 				}
 				else if (this.ignoreUnresolvablePlaceholders) {
 					// Proceed with unprocessed value.
+					//如果ignoreUnresolvablePlaceholders为true，说明忽略无法解析的${xxx}
 					startIndex = result.indexOf(this.placeholderPrefix, endIndex + this.placeholderSuffix.length());
 				}
 				else {
+					//报错了
 					throw new IllegalArgumentException("Could not resolve placeholder '" +
 							placeholder + "'" + " in value \"" + value + "\"");
 				}
+				//处理成功过了，移除
 				visitedPlaceholders.remove(originalPlaceholder);
 			}
 			else {
-				startIndex = -1;
+				startIndex = -1;//没有后缀包裹，不用解析了
 			}
 		}
 

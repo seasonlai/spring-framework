@@ -260,7 +260,9 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 				obtainApplicationContext().getType((String) handler) : handler.getClass());
 
 		if (handlerType != null) {
+			//拿到原始类型
 			Class<?> userType = ClassUtils.getUserClass(handlerType);
+			//拿到RequestMapping方法
 			Map<Method, T> methods = MethodIntrospector.selectMethods(userType,
 					(MethodIntrospector.MetadataLookup<T>) method -> {
 						try {
@@ -275,7 +277,9 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 				logger.trace("Mapped " + methods.size() + " handler method(s) for " + userType + ": " + methods);
 			}
 			methods.forEach((method, mapping) -> {
+				//拿到要代理的方法
 				Method invocableMethod = AopUtils.selectInvocableMethod(method, userType);
+				//mapping是RequestMappingInfo
 				registerHandlerMethod(handler, invocableMethod, mapping);
 			});
 		}

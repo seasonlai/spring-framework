@@ -44,7 +44,9 @@ abstract class AbstractPropertyLoadingBeanDefinitionParser extends AbstractSingl
 		String location = element.getAttribute("location");
 		if (StringUtils.hasLength(location)) {
 			location = parserContext.getReaderContext().getEnvironment().resolvePlaceholders(location);
+			//以逗号隔开
 			String[] locations = StringUtils.commaDelimitedListToStringArray(location);
+			//添加属性
 			builder.addPropertyValue("locations", locations);
 		}
 
@@ -68,7 +70,7 @@ abstract class AbstractPropertyLoadingBeanDefinitionParser extends AbstractSingl
 
 		builder.addPropertyValue("localOverride",
 				Boolean.valueOf(element.getAttribute("local-override")));
-
+		//设置bean为Spring内部使用
 		builder.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
 	}
 

@@ -126,9 +126,10 @@ public class PropertySourcesPlaceholderConfigurer extends PlaceholderConfigurerS
 	 */
 	@Override
 	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+		//propertySources为空，就会去加载environment中的属性、和XML中指定的文件中的属性
 		if (this.propertySources == null) {
 			this.propertySources = new MutablePropertySources();
-			if (this.environment != null) {
+			if (this.environment != null) {//因为实现了EnvironmentAware接口，environment在该接口方法中赋值
 				this.propertySources.addLast(
 					new PropertySource<Environment>(ENVIRONMENT_PROPERTIES_PROPERTY_SOURCE_NAME, this.environment) {
 						@Override
@@ -140,12 +141,15 @@ public class PropertySourcesPlaceholderConfigurer extends PlaceholderConfigurerS
 				);
 			}
 			try {
+				//进行加载XML中的location属性的文件，并合并props属性
 				PropertySource<?> localPropertySource =
 						new PropertiesPropertySource(LOCAL_PROPERTIES_PROPERTY_SOURCE_NAME, mergeProperties());
 				if (this.localOverride) {
+					//允许本地覆盖，就加在前面，优先级高
 					this.propertySources.addFirst(localPropertySource);
 				}
 				else {
+					//不允许本地覆盖，就加在后面，优先级低
 					this.propertySources.addLast(localPropertySource);
 				}
 			}
@@ -164,21 +168,24 @@ public class PropertySourcesPlaceholderConfigurer extends PlaceholderConfigurerS
 	 */
 	protected void processProperties(ConfigurableListableBeanFactory beanFactoryToProcess,
 			final ConfigurablePropertyResolver propertyResolver) throws BeansException {
-
+		//添加解析的标签，默认是${}、:
 		propertyResolver.setPlaceholderPrefix(this.placeholderPrefix);
 		propertyResolver.setPlaceholderSuffix(this.placeholderSuffix);
 		propertyResolver.setValueSeparator(this.valueSeparator);
-
+		//新建一个处理器的逻辑在这
 		StringValueResolver valueResolver = strVal -> {
+			//ignoreUnresolvablePlaceholders默认为false
 			String resolved = (this.ignoreUnresolvablePlaceholders ?
 					propertyResolver.resolvePlaceholders(strVal) :
 					propertyResolver.resolveRequiredPlaceholders(strVal));
+			//trimValues默认为false
 			if (this.trimValues) {
 				resolved = resolved.trim();
 			}
+			//如果设置了nullValue，则如果和nullValue相等，返回null
 			return (resolved.equals(this.nullValue) ? null : resolved);
 		};
-
+		//开始进行处理
 		doProcessProperties(beanFactoryToProcess, valueResolver);
 	}
 
