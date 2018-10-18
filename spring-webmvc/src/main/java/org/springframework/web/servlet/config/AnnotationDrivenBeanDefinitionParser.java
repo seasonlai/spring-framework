@@ -253,7 +253,7 @@ class AnnotationDrivenBeanDefinitionParser implements BeanDefinitionParser {
 		handlerAdapterDef.getPropertyValues().add("contentNegotiationManager", contentNegotiationManager);
 		handlerAdapterDef.getPropertyValues().add("webBindingInitializer", bindingDef);
 		handlerAdapterDef.getPropertyValues().add("messageConverters", messageConverters);
-		//添加增强，用于处理@@RequestBody、@ResponseBody
+		//添加增强，用于处理@RequestBody、@ResponseBody
 		addRequestBodyAdvice(handlerAdapterDef);
 		addResponseBodyAdvice(handlerAdapterDef);
 
@@ -287,10 +287,11 @@ class AnnotationDrivenBeanDefinitionParser implements BeanDefinitionParser {
 		uriContributorDef.getPropertyValues().addPropertyValue("conversionService", conversionService);
 		String uriContributorName = MvcUriComponentsBuilder.MVC_URI_COMPONENTS_CONTRIBUTOR_BEAN_NAME;
 		readerContext.getRegistry().registerBeanDefinition(uriContributorName, uriContributorDef);
-		//注册拦截器
+		//注册拦截器，主要是把conversionService的添加到请求request中
 		RootBeanDefinition csInterceptorDef = new RootBeanDefinition(ConversionServiceExposingInterceptor.class);
 		csInterceptorDef.setSource(source);
 		csInterceptorDef.getConstructorArgumentValues().addIndexedArgumentValue(0, conversionService);
+		//这里的MappedInterceptor好像只是简单的代理拦截器啊（因为最终构造方法前两个参数传空）
 		RootBeanDefinition mappedInterceptorDef = new RootBeanDefinition(MappedInterceptor.class);
 		mappedInterceptorDef.setSource(source);
 		mappedInterceptorDef.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
@@ -304,7 +305,7 @@ class AnnotationDrivenBeanDefinitionParser implements BeanDefinitionParser {
 		methodExceptionResolver.getPropertyValues().add("contentNegotiationManager", contentNegotiationManager);
 		methodExceptionResolver.getPropertyValues().add("messageConverters", messageConverters);
 		methodExceptionResolver.getPropertyValues().add("order", 0);
-		//添加处理@ResponseBody增强器
+		//给异常处理器添加处理@ResponseBody增强器
 		addResponseBodyAdvice(methodExceptionResolver);
 		if (argumentResolvers != null) {
 			methodExceptionResolver.getPropertyValues().add("customArgumentResolvers", argumentResolvers);
@@ -319,7 +320,7 @@ class AnnotationDrivenBeanDefinitionParser implements BeanDefinitionParser {
 		statusExceptionResolver.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
 		statusExceptionResolver.getPropertyValues().add("order", 1);
 		String statusExResolverName = readerContext.registerWithGeneratedName(statusExceptionResolver);
-		//默认异常处理器
+		//默认异常处理器，包含了多个异常类型的处理
 		RootBeanDefinition defaultExceptionResolver = new RootBeanDefinition(DefaultHandlerExceptionResolver.class);
 		defaultExceptionResolver.setSource(source);
 		defaultExceptionResolver.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);

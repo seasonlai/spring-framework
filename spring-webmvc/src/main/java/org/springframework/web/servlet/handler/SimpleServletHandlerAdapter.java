@@ -61,7 +61,7 @@ public class SimpleServletHandlerAdapter implements HandlerAdapter {
 
 	@Override
 	@Nullable
-	public ModelAndView handle(HttpServletRequest request, HttpServletResponse response, Object handler)
+	public ModelAndView  handle(HttpServletRequest request, HttpServletResponse response, Object handler)
 			throws Exception {
 
 		((Servlet) handler).service(request, response);

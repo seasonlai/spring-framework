@@ -79,7 +79,7 @@ public class ResponseStatusExceptionResolver extends AbstractHandlerExceptionRes
 			if (status != null) {
 				return resolveResponseStatus(status, request, response, handler, ex);
 			}
-
+			//递归处理
 			if (ex.getCause() instanceof Exception) {
 				ex = (Exception) ex.getCause();
 				return doResolveException(request, response, handler, ex);

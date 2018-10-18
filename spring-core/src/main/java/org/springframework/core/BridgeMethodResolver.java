@@ -61,6 +61,7 @@ public final class BridgeMethodResolver {
 	 * if no more specific one could be found)
 	 */
 	public static Method findBridgedMethod(Method bridgeMethod) {
+		//不是泛型方法直接返回
 		if (!bridgeMethod.isBridge()) {
 			return bridgeMethod;
 		}
@@ -69,6 +70,7 @@ public final class BridgeMethodResolver {
 		List<Method> candidateMethods = new ArrayList<>();
 		Method[] methods = ReflectionUtils.getAllDeclaredMethods(bridgeMethod.getDeclaringClass());
 		for (Method candidateMethod : methods) {
+			//和泛型方法不是同一个，但同名、同参数个数就先加入候选
 			if (isBridgedCandidateFor(candidateMethod, bridgeMethod)) {
 				candidateMethods.add(candidateMethod);
 			}
@@ -76,7 +78,7 @@ public final class BridgeMethodResolver {
 
 		// Now perform simple quick check.
 		if (candidateMethods.size() == 1) {
-			return candidateMethods.get(0);
+			return candidateMethods.get(0);//立刻返回了
 		}
 
 		// Search for candidate match.

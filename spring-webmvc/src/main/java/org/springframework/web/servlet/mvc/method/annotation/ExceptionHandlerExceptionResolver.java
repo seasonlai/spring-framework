@@ -274,7 +274,7 @@ public class ExceptionHandlerExceptionResolver extends AbstractHandlerMethodExce
 		if (getApplicationContext() == null) {
 			return;
 		}
-
+		//找到带@ControllerAdvice注解的bean
 		List<ControllerAdviceBean> adviceBeans = ControllerAdviceBean.findAnnotatedBeans(getApplicationContext());
 		AnnotationAwareOrderComparator.sort(adviceBeans);
 
@@ -284,9 +284,11 @@ public class ExceptionHandlerExceptionResolver extends AbstractHandlerMethodExce
 				throw new IllegalStateException("Unresolvable type for ControllerAdviceBean: " + adviceBean);
 			}
 			ExceptionHandlerMethodResolver resolver = new ExceptionHandlerMethodResolver(beanType);
+			//加入缓存
 			if (resolver.hasExceptionMappings()) {
 				this.exceptionHandlerAdviceCache.put(adviceBean, resolver);
 			}
+			//加入ResponseBodyAdvice
 			if (ResponseBodyAdvice.class.isAssignableFrom(beanType)) {
 				this.responseBodyAdvice.add(adviceBean);
 			}

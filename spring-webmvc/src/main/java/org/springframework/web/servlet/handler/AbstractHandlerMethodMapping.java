@@ -208,6 +208,7 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 				processCandidateBean(beanName);
 			}
 		}
+		//只是打印
 		handlerMethodsInitialized(getHandlerMethods());
 	}
 
@@ -245,6 +246,7 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 				logger.trace("Could not resolve type for bean '" + beanName + "'", ex);
 			}
 		}
+		//如果是有@Controller或@RequestMapping注解就解析方法
 		if (beanType != null && isHandler(beanType)) {
 			detectHandlerMethods(beanName);
 		}
@@ -266,6 +268,7 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 			Map<Method, T> methods = MethodIntrospector.selectMethods(userType,
 					(MethodIntrospector.MetadataLookup<T>) method -> {
 						try {
+							//返回RequestMappingInfo类型，实际是解析@RequestMapping注解
 							return getMappingForMethod(method, userType);
 						}
 						catch (Throwable ex) {
@@ -277,7 +280,7 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 				logger.trace("Mapped " + methods.size() + " handler method(s) for " + userType + ": " + methods);
 			}
 			methods.forEach((method, mapping) -> {
-				//拿到要代理的方法
+				//拿到要调用的方法
 				Method invocableMethod = AopUtils.selectInvocableMethod(method, userType);
 				//mapping是RequestMappingInfo
 				registerHandlerMethod(handler, invocableMethod, mapping);
@@ -569,8 +572,9 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 			try {
 				HandlerMethod handlerMethod = createHandlerMethod(handler, method);
 				assertUniqueMethodMapping(handlerMethod, mapping);
+				//对应mapping加入HandlerMethod
 				this.mappingLookup.put(mapping, handlerMethod);
-
+				//相应的url匹配
 				List<String> directUrls = getDirectUrls(mapping);
 				for (String url : directUrls) {
 					this.urlLookup.add(url, mapping);
@@ -579,14 +583,16 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 				String name = null;
 				if (getNamingStrategy() != null) {
 					name = getNamingStrategy().getName(handlerMethod, mapping);
+					//加入名字相对应缓存
 					addMappingName(name, handlerMethod);
 				}
-
+				//处理@CrossOrigin注解
 				CorsConfiguration corsConfig = initCorsConfiguration(handler, method, mapping);
 				if (corsConfig != null) {
+					//加入缓存
 					this.corsLookup.put(handlerMethod, corsConfig);
 				}
-
+				//加入缓存
 				this.registry.put(mapping, new MappingRegistration<>(mapping, handlerMethod, directUrls, name));
 			}
 			finally {

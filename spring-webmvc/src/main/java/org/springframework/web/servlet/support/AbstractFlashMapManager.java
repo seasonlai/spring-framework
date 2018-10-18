@@ -89,14 +89,17 @@ public abstract class AbstractFlashMapManager implements FlashMapManager {
 	@Override
 	@Nullable
 	public final FlashMap retrieveAndUpdate(HttpServletRequest request, HttpServletResponse response) {
+		//从session中拿到属性
 		List<FlashMap> allFlashMaps = retrieveFlashMaps(request);
 		if (CollectionUtils.isEmpty(allFlashMaps)) {
 			return null;
 		}
-
+		//拿到过期的
 		List<FlashMap> mapsToRemove = getExpiredFlashMaps(allFlashMaps);
+		//拿到匹配的
 		FlashMap match = getMatchingFlashMap(allFlashMaps, request);
 		if (match != null) {
+			//添加到过期中
 			mapsToRemove.add(match);
 		}
 
@@ -106,6 +109,7 @@ public abstract class AbstractFlashMapManager implements FlashMapManager {
 				synchronized (mutex) {
 					allFlashMaps = retrieveFlashMaps(request);
 					if (allFlashMaps != null) {
+						//移除并更新到session
 						allFlashMaps.removeAll(mapsToRemove);
 						updateFlashMaps(allFlashMaps, request, response);
 					}
@@ -163,18 +167,22 @@ public abstract class AbstractFlashMapManager implements FlashMapManager {
 		String expectedPath = flashMap.getTargetRequestPath();
 		if (expectedPath != null) {
 			String requestUri = getUrlPathHelper().getOriginatingRequestUri(request);
+			//直接比较字符串
 			if (!requestUri.equals(expectedPath) && !requestUri.equals(expectedPath + "/")) {
 				return false;
 			}
 		}
+		//拿到实际的参数
 		MultiValueMap<String, String> actualParams = getOriginatingRequestParams(request);
 		MultiValueMap<String, String> expectedParams = flashMap.getTargetRequestParams();
 		for (String expectedName : expectedParams.keySet()) {
 			List<String> actualValues = actualParams.get(expectedName);
+			//为null就不相等
 			if (actualValues == null) {
 				return false;
 			}
 			for (String expectedValue : expectedParams.get(expectedName)) {
+				//有一个不同就不相等
 				if (!actualValues.contains(expectedValue)) {
 					return false;
 				}

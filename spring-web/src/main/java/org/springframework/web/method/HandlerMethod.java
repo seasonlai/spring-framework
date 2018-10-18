@@ -135,7 +135,9 @@ public class HandlerMethod {
 		this.beanType = ClassUtils.getUserClass(beanType);
 		this.method = method;
 		this.bridgedMethod = BridgeMethodResolver.findBridgedMethod(method);
+		//把参数解析了
 		this.parameters = initMethodParameters();
+		//处理@ResponseStatus注解
 		evaluateResponseStatus();
 	}
 
